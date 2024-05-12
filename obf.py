@@ -23,7 +23,7 @@ def help():
                   -f, functions           modify functions names (only defined ones)
                   -v, variables           modify variables names (pay attention to local variables, still has some problems)
                   -b, binary              uses binary to obfuscate (deobfuscated from added code)
-                  -e, exadecimal          uses hex to obfuscate (deobfuscated from added code) 
+                  -e, hexadecimal         uses hex to obfuscate (deobfuscated from added code) 
                   -m, mask                adds random stuff to the code (if not specified uses '@@@@')
           
           Miscellaneous:
@@ -178,7 +178,7 @@ def obf_variables(code):
 
     return modified_variables_code
 def obf_mask(code, char):
-    print('[*] Masking the code using {char}. ')
+    print(f'[*] Masking the code using {char}. ')
 
     duration = 3
     progress_bar_thread = threading.Thread(target=progress_bar, args=(duration,))
@@ -192,6 +192,20 @@ def obf_mask(code, char):
     modified_code = f"mushroomic=\"\"\"{modified_code}\"\"\"\nexec(mushroomic.replace('{char}',''))"
     progress_bar_thread.join()
     return modified_code
+def obf_hexify(code):
+    print('[*] Replacing your code with the hexfied version')
+
+    duration = 3
+    progress_bar_thread = threading.Thread(target=progress_bar, args=(duration,))
+    progress_bar_thread.start()
+
+    modified_code = str(code).encode('utf-8')
+    modified_code_hex = modified_code.hex()
+    modified_code_hex_final=f"mushroomic=\"{modified_code_hex}\"\noriginal_bytes = bytes.fromhex(mushroomic)\noriginal_string = original_bytes.decode('utf-8')\nexec(original_string)"
+    
+    progress_bar_thread.join()
+
+    return modified_code_hex_final
 
 def main():
     args = sys.argv[1:]
@@ -247,6 +261,9 @@ def main():
         print('[*] Masking the code')
         modified_code=obf_mask(modified_code, mask_char)
 
+    if '-e' in args:
+        print('[*] Hexifying the code')
+        modified_code=obf_hexify(modified_code)
     #! Should be done only after the whole code is obfuscated 
 
     out = f"{file_name}.obf.{file_extension}"
