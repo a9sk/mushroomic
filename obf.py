@@ -56,6 +56,11 @@ if __name__ == '__main__':
     if '-c' in args: 
         index_code = args.index('-c')
         original_name = args[index_code + 1]
+        file_name, file_extension = original_name.rsplit('.', 1)
+        if file_extension != 'py':
+            print('[!] The obfuscation only works with python scripts for now')
+            print('[*] Pass a .py script as an argument after -c')
+            exit()
         if os.path.exists(original_name):
             print('[*] File found in the directory')
             with open(original_name, 'r') as original:
@@ -68,10 +73,8 @@ if __name__ == '__main__':
         print("[!] Missing '-c' flag followed by a file name.")
         exit()
 
-    modified_code=original_code.upper()
     #! Should be done only after the whole code is obfuscated 
 
-    file_name, file_extension = original_name.rsplit('.', 1)
     out = f"{file_name}.obf.{file_extension}"
 
     with open(out, "w") as output:
