@@ -2,7 +2,7 @@ import sys
 import os
 import random
 import string
-#import ast #? Abstract Syntax Tree
+import ast #? Abstract Syntax Tree
 import re
 import threading
 import time
@@ -20,7 +20,7 @@ def help():
   
           Obfuscation:
                   -a, all                 uses all of the tecniques implemented
-                  -f, functions           modify functions names
+                  -f, functions           modify functions names (only defined ones)
                   -v, variables           modify variables names (pay attention to local variables)
                   -b, binary              uses binary to obfuscate (deobfuscated from added code)
                   -e, exadecimal          uses hex to obfuscate (deobfuscated from added code) 
@@ -49,7 +49,7 @@ def banner():
 
             Mushroomic v1.0.0 @a9sk
 """)
-def functions(code):
+def obf_functions(code):
     print('[*] Searching for functions, all will be renamed')
     
     duration = 5
@@ -95,7 +95,88 @@ def progress_bar(duration):
     sys.stdout.write("\r[{}] {:.2f}%".format("=" * progress + " " * (progress_width - progress), 100))
     sys.stdout.flush()
     sys.stdout.write("\n")
+def obf_variables(code):
+    print('[*] Searching for variables, all will be renamed (functions might be renamed as well if -f not used before)')
+
+    duration = 3
+    progress_bar_thread = threading.Thread(target=progress_bar, args=(duration,))
+    progress_bar_thread.start()
+
+    used_names=set()
+    variable_mapping = {}
+    functions = set()
+
+    def random_name():
+        while True:
+            new_name = ''.join(random.choices(string.ascii_lowercase, k=10))
+            if new_name not in used_names:
+                used_names.add(new_name)
+                return new_name 
+
+    tree = ast.parse(code)
+    # print(ast.dump(tree)) #? for debugging purpose
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef):
+            functions.add(node.name)
+            for arg in node.args.args:
+                variable_mapping[arg.arg] = random_name()
+
     
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Store):
+            if node.id not in variable_mapping and node.id not in functions:
+                variable_mapping[node.id] = random_name()
+
+    modified_variables_code = code
+    for old_name, new_name in variable_mapping.items():
+        # Replace variable names only when they are standalone words, probably can be optimized :)
+        modified_variables_code = modified_variables_code.replace(' ' + old_name + ' ', ' ' + new_name + ' ')
+        modified_variables_code = modified_variables_code.replace(' ' + old_name + ')', ' ' + new_name + ')')
+        modified_variables_code = modified_variables_code.replace(' ' + old_name + '[', ' ' + new_name + '[')
+        modified_variables_code = modified_variables_code.replace(' ' + old_name + ':', ' ' + new_name + ':')
+        modified_variables_code = modified_variables_code.replace(' ' + old_name + ',', ' ' + new_name + ',')
+        modified_variables_code = modified_variables_code.replace(' ' + old_name + '\n', ' ' + new_name + '\n')
+
+        modified_variables_code = modified_variables_code.replace('(' + old_name + ')', '(' + new_name + ')')
+        modified_variables_code = modified_variables_code.replace('(' + old_name + ',', '(' + new_name + ',')
+
+        modified_variables_code = modified_variables_code.replace('\n' + old_name + ' ', '\n' + new_name + ' ')
+
+        modified_variables_code = modified_variables_code.replace('(' + old_name + '*', '(' + new_name + '*')
+        modified_variables_code = modified_variables_code.replace('(' + old_name + '+', '(' + new_name + '+')
+        modified_variables_code = modified_variables_code.replace('(' + old_name + '/', '(' + new_name + '/')
+        modified_variables_code = modified_variables_code.replace('(' + old_name + '-', '(' + new_name + '-')
+
+        modified_variables_code = modified_variables_code.replace('*' + old_name + ')', '*' + new_name + ')')
+        modified_variables_code = modified_variables_code.replace('*' + old_name + '*', '*' + new_name + '*')
+        modified_variables_code = modified_variables_code.replace('*' + old_name + '-', '*' + new_name + '-')
+        modified_variables_code = modified_variables_code.replace('*' + old_name + '/', '*' + new_name + '/')
+        modified_variables_code = modified_variables_code.replace('*' + old_name + '+', '*' + new_name + '+')
+
+        modified_variables_code = modified_variables_code.replace('-' + old_name + ')', '-' + new_name + ')')
+        modified_variables_code = modified_variables_code.replace('-' + old_name + '*', '-' + new_name + '*')
+        modified_variables_code = modified_variables_code.replace('-' + old_name + '-', '-' + new_name + '-')
+        modified_variables_code = modified_variables_code.replace('-' + old_name + '/', '-' + new_name + '/')
+        modified_variables_code = modified_variables_code.replace('-' + old_name + '+', '-' + new_name + '+')
+
+        modified_variables_code = modified_variables_code.replace('+' + old_name + ')', '+' + new_name + ')')
+        modified_variables_code = modified_variables_code.replace('+' + old_name + '*', '+' + new_name + '*')
+        modified_variables_code = modified_variables_code.replace('+' + old_name + '-', '+' + new_name + '-')
+        modified_variables_code = modified_variables_code.replace('+' + old_name + '/', '+' + new_name + '/')
+        modified_variables_code = modified_variables_code.replace('+' + old_name + '+', '+' + new_name + '+')
+
+        modified_variables_code = modified_variables_code.replace('/' + old_name + ')', '/' + new_name + ')')
+        modified_variables_code = modified_variables_code.replace('/' + old_name + '*', '/' + new_name + '*')
+        modified_variables_code = modified_variables_code.replace('/' + old_name + '-', '/' + new_name + '-')
+        modified_variables_code = modified_variables_code.replace('/' + old_name + '/', '/' + new_name + '/')
+        modified_variables_code = modified_variables_code.replace('/' + old_name + '+', '/' + new_name + '+')
+        
+
+    progress_bar_thread.join()
+
+    return modified_variables_code
+
 if __name__ == '__main__':
     args = sys.argv[1:]
 
@@ -116,7 +197,7 @@ if __name__ == '__main__':
             if os.path.exists(original_name):
                 print('[*] File found in the directory')
                 with open(original_name, 'r') as original:
-                    original_code=original.read()
+                    modified_code=original.read()
                     print('[*] File opened correctly')
             else:
                     print("[!] The file does not exist")
@@ -136,8 +217,11 @@ if __name__ == '__main__':
 
     if '-f' in args:
         print('[*] Obfuscating function names')
-        modified_code=functions(original_code)
+        modified_code=obf_functions(modified_code)
 
+    if '-v' in args:
+        print('[*] Obfuscating variables names')
+        modified_code=obf_variables(modified_code)
 
     #! Should be done only after the whole code is obfuscated 
 
