@@ -71,12 +71,14 @@ def obf_functions(code):
     
     duration = 3
     progress_bar_thread = threading.Thread(target=progress_bar, args=(duration,))
+    progress_bar_thread.daemon = True
     progress_bar_thread.start()
 
     used_names=set()
     name_mapping={}
     pattern = r'def\s+(\w+)\s*\('
     matches = re.findall(pattern, code)
+    modified_functions_code=code
 
     def random_name():
         while True:
@@ -101,6 +103,7 @@ def obf_variables(code):
 
     duration = 3
     progress_bar_thread = threading.Thread(target=progress_bar, args=(duration,))
+    progress_bar_thread.daemon = True
     progress_bar_thread.start()
 
     used_names=set()
@@ -180,8 +183,9 @@ def obf_variables(code):
 def obf_mask(code, char):
     print(f'[*] Masking the code using {char}. ')
 
-    duration = 3
+    duration = len(code)/1000
     progress_bar_thread = threading.Thread(target=progress_bar, args=(duration,))
+    progress_bar_thread.daemon = True
     progress_bar_thread.start()
 
     modified_code=str(code)
