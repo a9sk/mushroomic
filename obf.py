@@ -183,15 +183,19 @@ def obf_variables(code):
 def obf_mask(code, char):
     print(f'[*] Masking the code using {char}. ')
 
-    duration = len(code)/1000
+    if len(code) < 10000:
+        duration = 3
+    else:
+        duration = len(code)/5500
     progress_bar_thread = threading.Thread(target=progress_bar, args=(duration,))
     progress_bar_thread.daemon = True
     progress_bar_thread.start()
 
     modified_code=str(code)
-    for i in range (len(modified_code)*10):
+    for i in range (len(modified_code)):
         pos = random.randint(0, len(modified_code))
         modified_code = modified_code[:pos] + char + modified_code[pos:]
+
 
     modified_code = f"mushroomic=\"\"\"{modified_code}\"\"\"\nexec(mushroomic.replace('{char}',''))"
     progress_bar_thread.join()
@@ -201,6 +205,7 @@ def obf_hexify(code):
 
     duration = 3
     progress_bar_thread = threading.Thread(target=progress_bar, args=(duration,))
+    progress_bar_thread.daemon = True
     progress_bar_thread.start()
 
     modified_code = str(code).encode('utf-8')
