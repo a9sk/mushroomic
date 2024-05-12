@@ -4,6 +4,8 @@ import random
 import string
 #import ast #? Abstract Syntax Tree
 import re
+import threading
+import time
 
 def help():
     print("""
@@ -50,6 +52,10 @@ def banner():
 def functions(code):
     print('[*] Searching for functions, all will be renamed')
     
+    duration = 5
+    progress_bar_thread = threading.Thread(target=progress_bar, args=(duration,))
+    progress_bar_thread.start()
+
     used_names=set()
     name_mapping={}
     pattern = r'def\s+(\w+)\s*\('
@@ -66,17 +72,30 @@ def functions(code):
         new_name = random_name()
         name_mapping[old_name] = new_name
         modified_functions_code = code.replace(f'def {old_name}', f'def {new_name}')
-        print(old_name)
-        print(new_name)
 
     for old_name, new_name in name_mapping.items():
-        print(old_name)
-        print(new_name)
         modified_functions_code = re.sub(r'\b' + re.escape(old_name) + r'\b(?=\()', new_name, modified_functions_code)
 
+    progress_bar_thread.join()
 
     return modified_functions_code
+def progress_bar(duration):
+    start_time = time.time()
+    end_time = start_time + duration
+    progress_width = 50
 
+    while time.time() < end_time:
+        elapsed_time = time.time() - start_time
+        progress = int((elapsed_time / duration) * progress_width)
+
+        sys.stdout.write("\r[{}] {:.2f}%".format("=" * progress + " " * (progress_width - progress), (elapsed_time / duration) * 100))
+        sys.stdout.flush()
+
+        time.sleep(0.1)
+    sys.stdout.write("\r[{}] {:.2f}%".format("=" * progress + " " * (progress_width - progress), 100))
+    sys.stdout.flush()
+    sys.stdout.write("\n")
+    
 if __name__ == '__main__':
     args = sys.argv[1:]
 
