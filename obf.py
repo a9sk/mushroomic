@@ -21,10 +21,11 @@ def help():
           Obfuscation:
                   -a, all                 uses all of the tecniques implemented
                   -f, functions           modify functions names (only defined ones)
-                  -v, variables           modify variables names (pay attention to local variables)
+                  -v, variables           modify variables names (pay attention to local variables, still has some problems)
                   -b, binary              uses binary to obfuscate (deobfuscated from added code)
                   -e, exadecimal          uses hex to obfuscate (deobfuscated from added code) 
-
+                  -m, mask                adds random stuff to the code (if not specified uses '@@@@')
+          
           Miscellaneous:
                   -h, --h*                 display this help and exit 
 """)
@@ -49,10 +50,26 @@ def banner():
 
             Mushroomic v1.0.0 @a9sk
 """)
+def progress_bar(duration):
+    start_time = time.time()
+    end_time = start_time + duration
+    progress_width = 50
+
+    while time.time() < end_time:
+        elapsed_time = time.time() - start_time
+        progress = int((elapsed_time / duration) * progress_width)
+
+        sys.stdout.write("\r[{}] {:.2f}%".format("=" * progress + " " * (progress_width - progress), (elapsed_time / duration) * 100))
+        sys.stdout.flush()
+
+        time.sleep(0.1)
+    sys.stdout.write("\r[{}] {:.2f}%".format("=" * progress + " " * (progress_width - progress), 100))
+    sys.stdout.flush()
+    sys.stdout.write("\n")
 def obf_functions(code):
     print('[*] Searching for functions, all will be renamed')
     
-    duration = 5
+    duration = 3
     progress_bar_thread = threading.Thread(target=progress_bar, args=(duration,))
     progress_bar_thread.start()
 
@@ -79,24 +96,8 @@ def obf_functions(code):
     progress_bar_thread.join()
 
     return modified_functions_code
-def progress_bar(duration):
-    start_time = time.time()
-    end_time = start_time + duration
-    progress_width = 50
-
-    while time.time() < end_time:
-        elapsed_time = time.time() - start_time
-        progress = int((elapsed_time / duration) * progress_width)
-
-        sys.stdout.write("\r[{}] {:.2f}%".format("=" * progress + " " * (progress_width - progress), (elapsed_time / duration) * 100))
-        sys.stdout.flush()
-
-        time.sleep(0.1)
-    sys.stdout.write("\r[{}] {:.2f}%".format("=" * progress + " " * (progress_width - progress), 100))
-    sys.stdout.flush()
-    sys.stdout.write("\n")
 def obf_variables(code):
-    print('[*] Searching for variables, all will be renamed (functions might be renamed as well if -f not used before)')
+    print('[*] Searching for variables, all will be renamed (might modify comments and strings, working on it)')
 
     duration = 3
     progress_bar_thread = threading.Thread(target=progress_bar, args=(duration,))
@@ -176,15 +177,28 @@ def obf_variables(code):
     progress_bar_thread.join()
 
     return modified_variables_code
+def obf_mask(code, char):
+    print('[*] Masking the code using {char}. ')
 
-if __name__ == '__main__':
+    duration = 3
+    progress_bar_thread = threading.Thread(target=progress_bar, args=(duration,))
+    progress_bar_thread.start()
+
+    modified_code=str(code)
+    for i in range (len(modified_code)*10):
+        pos = random.randint(0, len(modified_code))
+        modified_code = modified_code[:pos] + char + modified_code[pos:]
+
+    modified_code = f"mushroomic=\"\"\"{modified_code}\"\"\"\nexec(mushroomic.replace('{char}',''))"
+    progress_bar_thread.join()
+    return modified_code
+
+def main():
     args = sys.argv[1:]
-
     if '-h' in args:
         help()
         exit()
 
-    
     if '-c' in args: 
         index_code = args.index('-c')
         if index_code + 1 < len(args):
@@ -209,10 +223,10 @@ if __name__ == '__main__':
         print("[!] Missing '-c' flag followed by a file name.")
         exit()
 
-    if '-a' in args or '-f' in args or '-b' in args or '-v' in args or '-e' in args:
+    if '-a' in args or '-f' in args or '-b' in args or '-v' in args or '-e' in args  or '-m' in args:
         print("")
     else:
-        print("[!] None of the flags (-a, -f, -b, -v, -e) are present.")
+        print("[!] None of the flags (-a, -f, -b, -v, -e, -m) are present.")
         exit()
 
     if '-f' in args:
@@ -223,6 +237,16 @@ if __name__ == '__main__':
         print('[*] Obfuscating variables names')
         modified_code=obf_variables(modified_code)
 
+    if '-m' in args:
+        mask_char=input('[*] Enter the char you want to use for the masking, if not entered will use @ (will be multipled by 4): ')
+        if mask_char == '':
+            mask_char='@@@@'
+        else:
+            mask_char+=mask_char+mask_char+mask_char
+            
+        print('[*] Masking the code')
+        modified_code=obf_mask(modified_code, mask_char)
+
     #! Should be done only after the whole code is obfuscated 
 
     out = f"{file_name}.obf.{file_extension}"
@@ -232,6 +256,13 @@ if __name__ == '__main__':
         print(out)
         output.write(str(modified_code))
 
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        print('[!] KeyboardInterrupt, exiting...')
+        exit()
         
 
     
