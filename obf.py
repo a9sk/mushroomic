@@ -183,7 +183,7 @@ def obf_variables(code):
 def obf_mask(code, char):
     print(f'[*] Masking the code using {char}. ')
 
-    if len(code) < 10000:
+    if len(code) < 20000:
         duration = 3
     else:
         duration = len(code)/5500
@@ -215,6 +215,21 @@ def obf_hexify(code):
     progress_bar_thread.join()
 
     return modified_code_hex_final
+def obf_binary(code):
+    print('[*] Replacing your code with the binary version')
+
+    duration = 3
+    progress_bar_thread = threading.Thread(target=progress_bar, args=(duration,))
+    progress_bar_thread.daemon = True
+    progress_bar_thread.start()
+
+    modified_code = str(code).encode('utf-8')
+    modified_code_binary = ' '.join(format(x, '08b') for x in modified_code)
+    modified_code_binary_final = f"mushroomic = '{modified_code_binary}'\noriginal_bytes = bytes([int(i, 2) for i in mushroomic.split()])\noriginal_string = original_bytes.decode('utf-8')\nexec(original_string)"
+
+    progress_bar_thread.join()
+
+    return modified_code_binary_final
 
 def main():
     args = sys.argv[1:]
@@ -273,6 +288,10 @@ def main():
     if '-e' in args:
         print('[*] Hexifying the code')
         modified_code=obf_hexify(modified_code)
+    
+    if '-b' in args:
+        print('[*] Obfuscating with binary')
+        modified_code = obf_binary(modified_code)
     #! Should be done only after the whole code is obfuscated 
 
     out = f"{file_name}.obf.{file_extension}"
