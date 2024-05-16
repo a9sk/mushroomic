@@ -2,7 +2,7 @@ import sys
 import os
 import random
 import string
-import ast #? Abstract Syntax Tree
+import ast 
 import re
 import threading
 import time
@@ -68,6 +68,7 @@ def progress_bar(duration):
     sys.stdout.write("\n")
 def obf_functions(code):
     print('[*] Searching for functions, all will be renamed')
+    time.sleep(0.5)
     
     duration = 3
     progress_bar_thread = threading.Thread(target=progress_bar, args=(duration,))
@@ -100,6 +101,7 @@ def obf_functions(code):
     return modified_functions_code
 def obf_variables(code):
     print('[*] Searching for variables, all will be renamed (might modify comments and strings, working on it)')
+    time.sleep(0.5)
 
     duration = 3
     progress_bar_thread = threading.Thread(target=progress_bar, args=(duration,))
@@ -182,6 +184,7 @@ def obf_variables(code):
     return modified_variables_code
 def obf_mask(code, char):
     print(f'[*] Masking the code using {char}. ')
+    time.sleep(0.5)
 
     if len(code) < 20000:
         duration = 3
@@ -202,6 +205,7 @@ def obf_mask(code, char):
     return modified_code
 def obf_hexify(code):
     print('[*] Replacing your code with the hexfied version')
+    time.sleep(0.5)
 
     duration = 3
     progress_bar_thread = threading.Thread(target=progress_bar, args=(duration,))
@@ -217,6 +221,7 @@ def obf_hexify(code):
     return modified_code_hex_final
 def obf_binary(code):
     print('[*] Replacing your code with the binary version')
+    time.sleep(0.5)
 
     duration = 3
     progress_bar_thread = threading.Thread(target=progress_bar, args=(duration,))
@@ -233,12 +238,8 @@ def obf_binary(code):
 def obf_total(code):
 
     print ('[!] Might take some time...')
-
-    duration = 3
-    progress_bar_thread = threading.Thread(target=progress_bar, args=(duration,))
-    progress_bar_thread.daemon = True
-    progress_bar_thread.start()
-
+    time.sleep(0.5)
+    
     modified_1_code=obf_functions(code)
     modified_2_code=obf_variables(modified_1_code)
     modified_3_code=obf_hexify(modified_2_code)
@@ -247,15 +248,18 @@ def obf_total(code):
     modified_6_code=obf_functions(modified_5_code)
     modified_7_code=obf_variables(modified_6_code)
 
-    progress_bar_thread.join()
-
     return modified_7_code
 
 
 def main():
     args = sys.argv[1:]
+
+    banner()
+    time.sleep(0.5)
     if '-h' in args:
+        time.sleep(0.5)
         help()
+        time.sleep(0.5)
         exit()
 
     if '-c' in args: 
@@ -265,18 +269,24 @@ def main():
             file_name, file_extension = original_name.rsplit('.', 1)
             if file_extension != 'py':
                 print('[!] The obfuscation only works with python scripts for now')
+                time.sleep(0.5)
                 print('[*] Pass a .py script as an argument after -c')
+                time.sleep(0.5)
                 exit()
             if os.path.exists(original_name):
                 print('[*] File found in the directory')
+                time.sleep(0.5)
                 with open(original_name, 'r') as original:
                     modified_code=original.read()
                     print('[*] File opened correctly')
+                    time.sleep(0.5)
             else:
                     print("[!] The file does not exist")
+                    time.sleep(0.5)
                     exit()     
         else:
             print("[!] Missing a valid file name after '-c' flag")
+            time.sleep(0.5)
             exit()
     else:
         print("[!] Missing '-c' flag followed by a file name.")
@@ -290,39 +300,48 @@ def main():
 
     if '-a' in args:
         print('[*] Obfuscating the whole code')
+        time.sleep(0.5)
         modified_code=obf_total(modified_code)
     else:
         if '-f' in args:
             print('[*] Obfuscating function names')
+            time.sleep(0.5)
             modified_code=obf_functions(modified_code)
 
         if '-v' in args:
             print('[*] Obfuscating variables names')
+            time.sleep(0.5)
             modified_code=obf_variables(modified_code)
 
         if '-m' in args:
             mask_char=input('[*] Enter the char you want to use for the masking, if not entered will use @ (will be multipled by 4): ')
+            time.sleep(0.5)
             if mask_char == '':
                 mask_char='@@@@'
             else:
                 mask_char+=mask_char+mask_char+mask_char
                 
             print('[*] Masking the code')
+            time.sleep(0.5)
             modified_code=obf_mask(modified_code, mask_char)
 
         if '-e' in args:
             print('[*] Hexifying the code')
+            time.sleep(0.5)
             modified_code=obf_hexify(modified_code)
         
         if '-b' in args:
             print('[*] Obfuscating with binary')
+            time.sleep(0.5)
             modified_code = obf_binary(modified_code)
 
     out = f"{file_name}.obf.{file_extension}"
 
     with open(out, "w") as output:
         print('[*] Saving the obfuscated code in')
+        time.sleep(0.5)
         print(out)
+        time.sleep(0.5)
         output.write(str(modified_code))
 
 
@@ -331,6 +350,7 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         print('[!] KeyboardInterrupt, exiting...')
+        time.sleep(0.5)
         exit()
         
 
