@@ -230,6 +230,27 @@ def obf_binary(code):
     progress_bar_thread.join()
 
     return modified_code_binary_final
+def obf_total(code):
+
+    print ('[!] Might take some time...')
+
+    duration = 3
+    progress_bar_thread = threading.Thread(target=progress_bar, args=(duration,))
+    progress_bar_thread.daemon = True
+    progress_bar_thread.start()
+
+    modified_1_code=obf_functions(code)
+    modified_2_code=obf_variables(modified_1_code)
+    modified_3_code=obf_hexify(modified_2_code)
+    modified_4_code=obf_binary(modified_3_code)
+    modified_5_code=obf_mask(modified_4_code, '@@@@')
+    modified_6_code=obf_functions(modified_5_code)
+    modified_7_code=obf_variables(modified_6_code)
+
+    progress_bar_thread.join()
+
+    return modified_7_code
+
 
 def main():
     args = sys.argv[1:]
@@ -267,32 +288,35 @@ def main():
         print("[!] None of the flags (-a, -f, -b, -v, -e, -m) are present.")
         exit()
 
-    if '-f' in args:
-        print('[*] Obfuscating function names')
-        modified_code=obf_functions(modified_code)
+    if '-a' in args:
+        print('[*] Obfuscating the whole code')
+        modified_code=obf_total(modified_code)
+    else:
+        if '-f' in args:
+            print('[*] Obfuscating function names')
+            modified_code=obf_functions(modified_code)
 
-    if '-v' in args:
-        print('[*] Obfuscating variables names')
-        modified_code=obf_variables(modified_code)
+        if '-v' in args:
+            print('[*] Obfuscating variables names')
+            modified_code=obf_variables(modified_code)
 
-    if '-m' in args:
-        mask_char=input('[*] Enter the char you want to use for the masking, if not entered will use @ (will be multipled by 4): ')
-        if mask_char == '':
-            mask_char='@@@@'
-        else:
-            mask_char+=mask_char+mask_char+mask_char
-            
-        print('[*] Masking the code')
-        modified_code=obf_mask(modified_code, mask_char)
+        if '-m' in args:
+            mask_char=input('[*] Enter the char you want to use for the masking, if not entered will use @ (will be multipled by 4): ')
+            if mask_char == '':
+                mask_char='@@@@'
+            else:
+                mask_char+=mask_char+mask_char+mask_char
+                
+            print('[*] Masking the code')
+            modified_code=obf_mask(modified_code, mask_char)
 
-    if '-e' in args:
-        print('[*] Hexifying the code')
-        modified_code=obf_hexify(modified_code)
-    
-    if '-b' in args:
-        print('[*] Obfuscating with binary')
-        modified_code = obf_binary(modified_code)
-    #! Should be done only after the whole code is obfuscated 
+        if '-e' in args:
+            print('[*] Hexifying the code')
+            modified_code=obf_hexify(modified_code)
+        
+        if '-b' in args:
+            print('[*] Obfuscating with binary')
+            modified_code = obf_binary(modified_code)
 
     out = f"{file_name}.obf.{file_extension}"
 
