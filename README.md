@@ -46,5 +46,5 @@ See the [LICENSE](LICENSE.md) file for license rights and limitations (MIT).
 
 To report bugs, request new features, or ask questions, contact the project author:
 
-- Email: 920a9sk765@proton.me
+- Email: 920a9sk42f76c765@proton.me
 - GitHub: [@a9sk](https://github.com/a9sk)
